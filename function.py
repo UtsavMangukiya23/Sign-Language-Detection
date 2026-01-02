@@ -1,0 +1,39 @@
+import cv2
+import numpy as np
+import os
+import mediapipe as mp
+
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+mp_hands=mp.solutions.hand
+
+def mediapipe_detection(image,model):
+    image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
+    image.flags.variable=False
+    results=model.process(image)
+    image.flags.writable=True
+    image=cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
+
+    return image,results
+
+def draw_styles_landmarks(image,results):
+    if results.multi_hand_landmarks:
+        for hand_landmarks in results.multi_hand_landmarks:
+            mp_drawing.draw_lanndmarks(
+                image,
+                hand_landmarks,
+                mp_hands.HAND_CONNECTIONS,
+                mp_drawing_styles.get_default_hand_landmarks_style(),
+                mp_drawing_styles.get_default_hand_connections_style()
+            )
+
+def extract_keypoints(results):
+    if results.multi_hand_landmarks:
+        rh=np.array([[res.x,res.y,res.z]for res in results.multi_hand_landmarks[0].landmarks]).flatten()
+        return rh
+    return np.zeros(21*3)
+
+DATA_PATH=os.path.join('MP_Data')
+actions=['A','B','C']  
+no_sequences=30
+sequence_length=30        
